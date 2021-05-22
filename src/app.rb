@@ -12,5 +12,5 @@ FunctionsFramework.http "send_message" do |request|
   msg = input["message"].to_s
   msg.empty? ? "Greetings, fellow humans!!!" : msg
   message = Message.find 1
-  message.formatted_response
+  message.formatted_text
 end
