@@ -7,3 +7,4 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 gem "functions_framework", "~> 0.9"
 gem 'activerecord', '~> 4.2', '>= 4.2.6'
 gem 'pg', '~> 0.18.4'
+gem 'rspec'
