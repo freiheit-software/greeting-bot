@@ -1,6 +1,7 @@
 require "functions_framework"
 require "json"
 require 'pg'
+require 'date'
 require 'net/http'
 
 FunctionsFramework.on_startup do |function|
@@ -72,4 +73,10 @@ FunctionsFramework.http "events" do |request|
   )
 
   ""
+end
+
+FunctionsFramework.http "quotes" do |request|
+  parser = Parser.new(request: request)
+
+  parser.date.to_s
 end
