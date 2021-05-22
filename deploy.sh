@@ -16,7 +16,7 @@ cd "$base_dir"
 fi
 
 # deploy sendMessage
-if [ "$function_name" = "all" -o "$function_name" = "sendmessage" ]; then
+if [ "$function_name" = "all" -o "$function_name" = "send_message" ]; then
 cd "$target_dir"
 gcloud functions deploy sendMessage --runtime=ruby27 --trigger-http --entry-point=send_message --region=europe-west3
 cd "$base_dir"
