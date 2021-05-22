@@ -7,6 +7,7 @@ FunctionsFramework.on_startup do |function|
   require_relative "db"
   require_relative "lib/message"
   require_relative "lib/parser"
+  require_relative "lib/home_tab_builder"
 end
 
 FunctionsFramework.http "send_message" do |request|
@@ -26,105 +27,41 @@ end
 FunctionsFramework.http "events" do |request|
   body = JSON.parse request.body.read
   parser = Parser.new request: request
+  user_id = body['event']['user']
 
   data = {
-    "user_id": body["event"]["user"],
+    "user_id": user_id,
     "view": {
         "type": "home",
-        "blocks": [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": "Welcome to our greeting bot."
-          }
-        },
-      ]
+        "blocks": []
     }
   }
 
-  data[:view][:blocks].push({
-    "type": "header",
-    "text": {
-      "type": "plain_text",
-      "text": "Quotes 💬",
-      "emoji": true
-    }
-  })
+  home_tab = HomeTabBuilder.new user_id: user_id
+
+  data[:view][:blocks].push(home_tab.create_header())
+  data[:view][:blocks].push(home_tab.create_quotes_title())
 
   Message.quotes.published.order(shown: :desc).each do |message|
-    data[:view][:blocks].push({
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "#{message.text}"
-      }
-    })
-    data[:view][:blocks].push({
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": "<@#{message.author}> on #{message.date}"
-				}
-			]
-		})
+    home_tab.create_quote(message).each do |block|
+      data[:view][:blocks].push(block)
+    end
   end
 
-  data[:view][:blocks].push({
-    "type": "header",
-    "text": {
-      "type": "plain_text",
-      "text": "Appreciations 💚",
-      "emoji": true
-    }
-  })
+  data[:view][:blocks].push(home_tab.create_appreciation_title)
 
   Message.appreciations.published.order(shown: :desc).each do |message|
-    data[:view][:blocks].push({
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "#{message.text}"
-      }
-    })
-    data[:view][:blocks].push({
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": "<@#{message.creator}> sent that appreciation on #{message.date}"
-				}
-			]
-		})
+    home_tab.create_appreciation(message).each do |block|
+      data[:view][:blocks].push(block)
+    end
   end
 
-  data[:view][:blocks].push({
-    "type": "header",
-    "text": {
-      "type": "plain_text",
-      "text": "Trivia 🤓",
-      "emoji": true
-    }
-  })
+  data[:view][:blocks].push(home_tab.create_trivia_title())
 
   Message.trivia.published.order(shown: :desc).each do |message|
-    data[:view][:blocks].push({
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "#{message.text}"
-      }
-    })
-    data[:view][:blocks].push({
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": "Created on #{message.date}"
-				}
-			]
-		})
+    home_tab.create_trivia(message).each do |block|
+      data[:view][:blocks].push(block)
+    end
   end
 
   uri = URI('https://slack.com/api/views.publish')
