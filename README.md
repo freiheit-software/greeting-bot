@@ -1,1 +1,1 @@
-# greeting-bot
+# mood-bot
