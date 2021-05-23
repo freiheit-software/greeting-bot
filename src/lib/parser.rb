@@ -19,6 +19,18 @@ class Parser
     request.params["channel_id"]
   end
 
+  def subscriber_id
+    if parameters.first.nil?
+      channel_id
+    elsif parameters.first == "me"
+      user_id
+    elsif user_ids.first == user_id
+      user_id
+    else
+      nil
+    end
+  end
+
   def challenge
     body = JSON.parse request.body.read rescue {}
     body["challenge"].to_s
@@ -29,10 +41,15 @@ class Parser
     input.gsub(/[“”]/, '"').scan(/"([^"]*)"/)
   end
 
-  # [["@USER_ID|user.handle"]]
-  def creator_id
+  # ["C082JDXS1DU", "C182JDAS1FU"]
+  def user_ids
     ids = input.scan(/<([^>]*)>/)
-    ids.first.first.split("|")&.first if ids.present?
+    ids.first.map { |id| id.split("|").first[1..-1] } if ids.present?
+  end
+
+  # "C082JDXS1DU"
+  def creator_id
+    user_ids.first
   end
 
   def date

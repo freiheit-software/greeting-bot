@@ -88,10 +88,12 @@ FunctionsFramework.http "handle_greet_command" do |request|
 
   case
   when parser.command == "subscribe"
-    Subscription.find_or_create_by(subscriber: parser.channel_id)
+    return { "response_type" => "ephemeral", "text" => "No valid subscriber found" } if parser.subscriber_id.nil?
+    Subscription.find_or_create_by(subscriber: parser.subscriber_id)
     { "response_type" => "ephemeral", "text" => "Subscription successful" }
   when parser.command == "unsubscribe"
-    Subscription.find_by(subscriber: parser.channel_id).try(:destroy)
+    return { "response_type" => "ephemeral", "text" => "No valid subscriber found" } if parser.subscriber_id.nil?
+    Subscription.find_by(subscriber: parser.subscriber_id).try(:destroy)
     { "response_type" => "ephemeral", "text" => "Unsubscribe successful" }
   when parser.input.start_with?("add trivia")
     parser.quotes.each do |quote|
