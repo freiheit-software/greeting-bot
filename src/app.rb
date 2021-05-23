@@ -25,7 +25,7 @@ FunctionsFramework.http "send_messages_to_subscribers" do |request|
 end
 
 FunctionsFramework.http "random_greeting" do |request|
-  recipient = request.params['channel_id']
+  recipient = request.params['user_id']
   message = Message.sample Message.messages_for_recipient recipient
   SlackApi.new(data:{ text: message.text, channel: recipient, link_names: true }).send
   message.update(shown: Date.today)
@@ -100,5 +100,14 @@ end
 FunctionsFramework.http "handle_greet_command" do |request|
   parser = Parser.new(request: request)
 
-  parser.date.to_s
+  case parser.command
+  when "subscribe"
+    Subscription.find_or_create_by(subscriber: parser.channel_id)
+    { "response_type" => "ephemeral", "text" => "Subscription successful" }
+  when "unsubscribe"
+    Subscription.find_by(subscriber: parser.channel_id).try(:destroy)
+    { "response_type" => "ephemeral", "text" => "Unsubscribe successful" }
+  else
+    { "response_type" => "ephemeral", "text" => "Sorry, slash commando, that didn’t work. Please try again." }
+  end
 end

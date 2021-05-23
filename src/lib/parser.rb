@@ -15,6 +15,10 @@ class Parser
     request.params["user_name"]
   end
 
+  def channel_id
+    request.params["channel_id"]
+  end
+
   def challenge
     body = JSON.parse request.body.read rescue {}
     body["challenge"].to_s
@@ -22,12 +26,12 @@ class Parser
 
   # [[quote1], [quote2]]
   def quotes
-    command.scan(/"([^"]*)"/)
+    input.scan(/"([^"]*)"/)
   end
 
   # [["@USER_ID|user.handle"]]
   def users
-    command.scan(/<([^>]*)>/).split("|").first
+    input.scan(/<([^>]*)>/).split("|").first
   end
 
   def date
@@ -38,7 +42,20 @@ class Parser
     end
   end
 
+  def command
+    tokens.first
+  end
+
+  def parameters
+    command, *params = tokens
+    params
+  end
+
   private
+
+  def tokens
+    @input ||= input.split
+  end
 
   def week_days
     @week_days ||= %w(monday tuesday wednesday thursday friday saturday sunday)
@@ -48,11 +65,11 @@ class Parser
     Date.today - Date.today.cwday + 1
   end
 
-  def command
-    @command ||= request.params["text"]
+  def input
+    @input ||= request.params["text"]
   end
 
   def date_text
-    command.split(" on ")[1]&.strip&.downcase
+    input.split(" on ")[1]&.strip&.downcase
   end
 end
