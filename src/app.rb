@@ -29,21 +29,6 @@ FunctionsFramework.http "random_greeting" do |request|
   message = Message.sample Message.messages_for_recipient recipient
   SlackApi.new(data:{ text: message.text, channel: recipient, link_names: true }).send
   message.update(shown: Date.today)
-  puts recipient
-  ""
-end
-
-FunctionsFramework.http "send_message" do |request|
-  msg = Message.find 1
-  data = {
-    "text" => msg.formatted_text,
-    "channel" => "#hackathon-may-2021"
-  }
-  uri = URI('https://slack.com/api/chat.postMessage')
-  res = Net::HTTP.post(uri,
-	data.to_json,
-	{"Content-Type" => "application/json; charset=UTF-8", "Authorization" => "Bearer " + ENV['SLACK_BOT_TOKEN'] })
-  puts res.body
   ""
 end
 
