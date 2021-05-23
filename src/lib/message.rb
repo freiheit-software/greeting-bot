@@ -2,6 +2,8 @@ require 'date'
 
 class Message < ActiveRecord::Base
 
+  enum category: [:not_assigned, :quote, :appreciation, :trivia]
+
   scope :quotes, -> { where(category: 1) }
   scope :appreciations, -> { where(category: 2) }
   scope :trivia, -> { where(category: 3) }

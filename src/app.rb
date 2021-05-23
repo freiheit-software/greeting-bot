@@ -3,6 +3,7 @@ require "json"
 require 'pg'
 require 'date'
 require 'net/http'
+require 'byebug'
 
 FunctionsFramework.on_startup do |function|
   require_relative "db"
@@ -85,14 +86,42 @@ end
 FunctionsFramework.http "handle_greet_command" do |request|
   parser = Parser.new(request: request)
 
-  case parser.command
-  when "subscribe"
+  case
+  when parser.command == "subscribe"
     Subscription.find_or_create_by(subscriber: parser.channel_id)
     { "response_type" => "ephemeral", "text" => "Subscription successful" }
-  when "unsubscribe"
+  when parser.command == "unsubscribe"
     Subscription.find_by(subscriber: parser.channel_id).try(:destroy)
     { "response_type" => "ephemeral", "text" => "Unsubscribe successful" }
+  when parser.input.start_with?("add trivia")
+    parser.quotes.each do |quote|
+      message = Message.create(creator: parser.user_id, text: quote.first, category: :trivia)
+    end
+
+    {
+      response_type: "ephemeral",
+      text: "Trivia is saved! Whoop whoop!"
+    }
+  when parser.input.start_with?("add quote")
+    # add quote "Italy won Eurovision" by @Odeta on Friday
+    # add quote "Italy won Eurovision" by @Odeta on 12.02.2020
+    # parser.quotes
+    # parser.creator_id
+    # parser.date
+
+    {
+      response_type: "ephemeral",
+      text: "Quote is saved! Whoop whoop!"
+    }
+  when parser.input.start_with?("add appreciation")
+    {
+      response_type: "ephemeral",
+      text: "Appreciation is saved! Whoop whoop!"
+    }
   else
-    { "response_type" => "ephemeral", "text" => "Sorry, slash commando, that didn’t work. Please try again." }
+    {
+      response_type: "ephemeral",
+      text: "Sorry, slash commando, that didn’t work. Please try again."
+    }
   end
 end

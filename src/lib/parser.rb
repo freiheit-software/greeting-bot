@@ -26,12 +26,13 @@ class Parser
 
   # [[quote1], [quote2]]
   def quotes
-    input.scan(/"([^"]*)"/)
+    input.gsub(/[“”]/, '"').scan(/"([^"]*)"/)
   end
 
   # [["@USER_ID|user.handle"]]
-  def users
-    input.scan(/<([^>]*)>/).split("|").first
+  def creator_id
+    ids = input.scan(/<([^>]*)>/)
+    ids.first.first.split("|")&.first if ids.present?
   end
 
   def date
@@ -51,10 +52,14 @@ class Parser
     params
   end
 
+  def input
+    @input ||= request.params["text"]
+  end
+
   private
 
   def tokens
-    @input ||= input.split
+    @tokens ||= input.split
   end
 
   def week_days
@@ -63,10 +68,6 @@ class Parser
 
   def beginning_of_week
     Date.today - Date.today.cwday + 1
-  end
-
-  def input
-    @input ||= request.params["text"]
   end
 
   def date_text
