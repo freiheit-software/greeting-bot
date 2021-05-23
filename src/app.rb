@@ -7,8 +7,30 @@ require 'net/http'
 FunctionsFramework.on_startup do |function|
   require_relative "db"
   require_relative "lib/message"
+  require_relative "lib/subscription"
   require_relative "lib/parser"
   require_relative "lib/home_tab_builder"
+  require_relative "lib/slack_api"
+end
+
+FunctionsFramework.http "send_messages_to_subscribers" do |request|
+    Subscription
+    .all
+    .each do |subscription|
+      message = Message.sample Message.messages_for_recipient subscription.subscriber
+      SlackApi.new(data:{ text: message.text, channel: subscription.subscriber, link_names: true }).send
+      message.update(shown: Date.today)
+    end
+  ""
+end
+
+FunctionsFramework.http "random_greeting" do |request|
+  recipient = request.params['channel_id']
+  message = Message.sample Message.messages_for_recipient recipient
+  SlackApi.new(data:{ text: message.text, channel: recipient, link_names: true }).send
+  message.update(shown: Date.today)
+  puts recipient
+  ""
 end
 
 FunctionsFramework.http "send_message" do |request|
@@ -75,7 +97,7 @@ FunctionsFramework.http "events" do |request|
   ""
 end
 
-FunctionsFramework.http "quotes" do |request|
+FunctionsFramework.http "handle_greet_command" do |request|
   parser = Parser.new(request: request)
 
   parser.date.to_s
